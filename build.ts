@@ -7,13 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const markdownDir = path.join(__dirname, 'markdown');
-const outputDir = path.join(__dirname, 'dist/slides');
+const outputDir = path.join(__dirname, 'dist');
 const indexPath = path.join(__dirname, 'dist/index.html');
 
-// Create public directory if it doesn't exist
-if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, {recursive: true})
 }
+fs.mkdirSync(outputDir, { recursive: true });
 
 // --- Build Slides ---
 console.log('Building slides...');
@@ -21,83 +21,17 @@ const mdFiles = fs.readdirSync(markdownDir).filter(file => file.endsWith('.md'))
 
 mdFiles.forEach(file => {
     const mdFilePath = path.join(markdownDir, file);
-    const htmlFileName = file.replace('.md', '.html');
-    const htmlFilePath = path.join(outputDir, htmlFileName);
-    console.log(`Converting ${file} to ${htmlFileName}...`);
-    try {
-        execSync(`npx marp ${mdFilePath} -o ${htmlFilePath}`);
-
-        // Read the generated HTML file
-        let slideHtmlContent = fs.readFileSync(htmlFilePath, 'utf8');
-
-        // Back button HTML with initial hidden styles and ID
-        const backButtonHtml = `
-        <a id="backButton" href="../index.html" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background-color: rgba(0,0,0,0.6); color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-family: 'Inter', sans-serif; font-size: 16px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); transition: opacity 0.3s ease; opacity: 0; pointer-events: none;">&larr; トップへ戻る</a>
-        `;
-
-        // JavaScript for dynamic visibility
-        const visibilityScript = `
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const backButton = document.getElementById('backButton');
-                let hideTimeout;
-
-                function showButton() {
-                    clearTimeout(hideTimeout);
-                    if (backButton) {
-                        backButton.style.opacity = '1';
-                        backButton.style.pointerEvents = 'auto';
-                    }
-                    hideTimeout = setTimeout(hideButton, 2000); // Hide after 2 seconds
-                }
-
-                function hideButton() {
-                    if (backButton) {
-                        backButton.style.opacity = '0';
-                        backButton.style.pointerEvents = 'none';
-                    }
-                }
-
-                // Show button on interaction
-                document.addEventListener('mousedown', showButton);
-                document.addEventListener('mousemove', showButton);
-                document.addEventListener('touchend', showButton);
-
-                // Initial hide (in case of no immediate interaction)
-                hideButton();
-            });
-        </script>
-        `;
-        
-        const mermaidSetting = `
-        <script type="module">
-            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs';
-            mermaid.initialize({ startOnLoad: true });
-            await mermaid.run({
-                querySelector: '.language-mermaid'
-            });
-        </script>
-        `
-
-        // Inject the back button right after the <body> tag
-        slideHtmlContent = slideHtmlContent.replace(/<body[^>]*>/, `<body>\n${backButtonHtml}\n${visibilityScript}\n${mermaidSetting}`);
-
-        // Write the modified HTML back to the file
-        fs.writeFileSync(htmlFilePath, slideHtmlContent);
-
-    } catch (error) {
-        console.error(`Error converting ${file}:`, error.stderr.toString());
-    }
+    const slideName = path.basename(file, '.md');
+    execSync(`npm run slidev:build -- --out ${outputDir}/${slideName} --base /${slideName} ${mdFilePath}`);
 });
 console.log('Slide build complete.');
 
 
-// --- Generate Index Page ---
+// // --- Generate Index Page ---
 console.log('Generating index.html...');
 const slideLinks = mdFiles.map(file => {
-    const htmlFileName = file.replace('.md', '.html');
     const slideName = path.basename(file, '.md');
-    return `<li><a href="slides/${htmlFileName}">${slideName}</a></li>`;
+    return `<li><a href="${slideName}/">${slideName}</a></li>`;
 });
 
 const htmlContent = `
