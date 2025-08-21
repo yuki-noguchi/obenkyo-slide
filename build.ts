@@ -31,7 +31,7 @@ console.log('Slide build complete.');
 console.log('Generating index.html...');
 const slideLinks = mdFiles.map(file => {
     const slideName = path.basename(file, '.md');
-    return `<li><a href="${slideName}/">${slideName}</a></li>`;
+    return `<li><a target="_blank" href="${slideName}/">${slideName}</a></li>`;
 });
 
 const htmlContent = `
