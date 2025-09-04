@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "slidev:build": "slidev build",
-    "build": "tsx build.ts"
+    "build": "tsx build.ts",
+    "preview": "tsx build.ts && vite preview"
   },
   "dependencies": {
     "@slidev/cli": "^52.1.0",
