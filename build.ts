@@ -22,6 +22,7 @@ const mdFiles = fs.readdirSync(markdownDir).filter(file => file.endsWith('.md'))
 mdFiles.forEach(file => {
     const mdFilePath = path.join(markdownDir, file);
     const slideName = path.basename(file, '.md');
+
     execSync(`npm run slidev:build -- --out ${outputDir}/${slideName} --base /obenkyo-slide/${slideName} ${mdFilePath}`);
 });
 console.log('Slide build complete.');
